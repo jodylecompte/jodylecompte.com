@@ -11,17 +11,6 @@ type Props = {
 
 const Feed = ({ edges }: Props) => (
   <div className={styles["feed"]}>
-    <div
-      style={{
-        background: "#000",
-        color: "#fff",
-        textAlign: "center",
-        padding: "20px",
-        marginBottom: "2em",
-      }}
-    >
-      #BlackLivesMatter
-    </div>
     {edges.map((edge) => (
       <div className={styles["feed__item"]} key={edge.node.fields.slug}>
         <div className={styles["feed__item-meta"]}>
