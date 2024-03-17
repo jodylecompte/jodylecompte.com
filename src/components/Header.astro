@@ -1,0 +1,29 @@
+---
+import ThemeToggle from "../components/ThemeToggle.astro";
+---
+
+<header>
+  <div>
+    <a href="/">
+      <h1 class="font-bold underline">JodyLeCompte.com</h1>
+    </a>
+  </div>
+  <div>
+    <nav>
+      <a href="post">Posts</a>
+      <a href="#">Tags</a>
+      <a href="#">Projects</a>
+    </nav>
+    <ThemeToggle />
+  </div>
+
+  <style>
+    header {
+      @apply flex justify-between items-center;
+    }
+
+    div {
+      @apply flex items-center;
+    }
+  </style>
+</header>

@@ -1,0 +1,40 @@
+---
+import Image from "astro/components/Image.astro";
+import LogoGithub from "../images/social/github.webp";
+import LogoLinkedIn from "../images/social/linkedin.webp";
+import LogoTwitter from "../images/social/twitter.webp";
+import LogoYouTube from "../images/social/youtube.svg";
+---
+
+<ul>
+  <li>
+    <a href="https://github.com/jodylecompte">
+      <Image src={LogoGithub} alt="GitHub" />
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin/in/jodylecompte">
+      <Image src={LogoLinkedIn} alt="GitHub" />
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin/in/jodylecompte">
+      <Image src={LogoTwitter} alt="GitHub" />
+    </a>
+  </li>
+  <li>
+    <a href="https://linkedin/in/jodylecompte">
+      <Image src={LogoYouTube} class="!w-9" alt="GitHub" />
+    </a>
+  </li>
+</ul>
+
+<style>
+  ul {
+    @apply flex justify-center items-center gap-4 px-4;
+  }
+
+  img {
+    @apply w-8 h-auto;
+  }
+</style>

@@ -1,17 +1,56 @@
 ---
-import ThemeIcon from "../components/ThemeToggle.astro";
+import Image from "astro/components/Image.astro";
+import Layout from "../components/Layout.astro";
+import HeroImg from "../images/hero.webp";
+import Social from "../components/Social.astro";
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-  </head>
-  <body class="bg-green-500 dark:bg-red-500">
-    <ThemeIcon />
-    <h1 class="text-3xl font-bold underline">JodyLeCompte.com</h1>
-  </body>
-</html>
+<Layout>
+  <div class="hero">
+    <div>
+      <h1>
+        Projects & Writing By
+        <span>Jody LeCompte</span>
+      </h1>
+      <Image src={HeroImg} alt="Jody LeCompte" height="500" width="500" />
+    </div>
+    <div class="copy">
+      <p>
+        I'm Jody, a senior software engineer based in the greater New Orleans
+        area. I'm currently working at Celebration Travel Group as a fullstack
+        engineer. I'm also a husband, father, and a lover of all things tech.
+      </p>
+      <p>
+        I specialize in TypeScript, Node, React, and Angular, with experience in
+        PHP, Python, Elixir, and other technologies. My primary focus is
+        promoting online accessibility and inclusivity, both in my work and in
+        encouraging others to do the same.
+      </p>
+      <Social />
+    </div>
+  </div>
+</Layout>
+
+<style>
+  h1 {
+    @apply text-5xl font-bold text-center mb-8 leading-tight;
+  }
+  span {
+    background: -webkit-linear-gradient(left, #faa23d, #f70965);
+    background-clip: border-box;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero {
+    @apply flex gap-20 items-center mt-24;
+  }
+
+  .hero > div {
+    @apply basis-full;
+  }
+
+  .copy {
+    @apply prose prose-lg dark:prose-invert;
+  }
+</style>
