@@ -3,6 +3,13 @@ import Image from "astro/components/Image.astro";
 import Layout from "../components/Layout.astro";
 import HeroImg from "../images/hero.webp";
 import Social from "../components/Social.astro";
+import { getCollection } from "astro:content";
+import { format } from "date-fns";
+
+const allPosts = await getCollection("posts");
+const sortedPosts = allPosts.sort((a, b) => {
+  return b.data.postedDate.getTime() - a.data.postedDate.getTime();
+});
 ---
 
 <Layout>
@@ -29,6 +36,20 @@ import Social from "../components/Social.astro";
       <Social />
     </div>
   </div>
+  <div>
+    <h2>Recent Posts</h2>
+    <ul>
+      {
+        sortedPosts.map((post) => (
+          <li>
+            <a href={`/posts/${post.slug}/`}>{post.data.title}</a>
+            <time>Posted {format(post.data.postedDate, "MM/dd/yyyy")}</time>
+            <p>{post.data.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
 </Layout>
 
 <style>
@@ -52,5 +73,27 @@ import Social from "../components/Social.astro";
 
   .copy {
     @apply prose prose-lg dark:prose-invert;
+  }
+  h2 {
+    @apply mt-12 text-4xl font-bold mb-8;
+  }
+
+  ul {
+  }
+
+  li {
+    @apply my-4 flex flex-col;
+  }
+
+  li a {
+    @apply text-2xl font-bold;
+  }
+
+  li p {
+    @apply prose prose-lg dark:prose-invert;
+  }
+
+  time {
+    @apply text-sm mt-1 mb-2;
   }
 </style>

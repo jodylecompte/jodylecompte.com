@@ -16,7 +16,9 @@ import Footer from "./Footer.astro";
     <main>
       <slot />
     </main>
-    <Footer />
+    <div>
+      <Footer />
+    </div>
   </body>
 </html>
 
@@ -27,10 +29,14 @@ import Footer from "./Footer.astro";
   }
 
   body {
-    @apply flex flex-col text-black dark:text-white max-w-5xl mx-auto;
+    @apply flex flex-col text-[#374151] dark:text-white max-w-5xl mx-auto;
   }
 
   main {
     @apply flex-1 mx-auto;
+  }
+
+  div {
+    @apply mt-24;
   }
 </style>
