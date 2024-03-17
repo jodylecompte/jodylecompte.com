@@ -1,0 +1,30 @@
+---
+import { getCollection } from "astro:content";
+// import MarkdownPostLayout from "../../layouts/MarkdownPostLayout.astro";
+import Layout from "../../components/Layout.astro";
+
+export async function getStaticPaths() {
+  const blogEntries = await getCollection("posts");
+  return blogEntries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await (entry as any).render();
+const { title } = (entry as any).data;
+---
+
+<Layout>
+  <article>
+    <h1>{title}</h1>
+    <Content />
+  </article>
+</Layout>
+
+<style is:global>
+  article {
+    @apply mt-24 prose prose-xl dark:prose-invert;
+  }
+</style>
