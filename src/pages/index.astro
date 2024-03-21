@@ -10,9 +10,15 @@ const allPosts = await getCollection("posts");
 const sortedPosts = allPosts.sort((a, b) => {
   return b.data.postedDate.getTime() - a.data.postedDate.getTime();
 });
+
+const mainCopy = `
+I'm Jody, a senior software engineer based in the greater New Orleans
+        area. I'm currently working at Celebration Travel Group as a full-stack
+        engineer. I'm also a husband, father, and a lover of all things tech.
+`;
 ---
 
-<Layout>
+<Layout metaDescription={mainCopy} title="Home | JodyLeCompte.com">
   <div class="hero">
     <div>
       <h1>

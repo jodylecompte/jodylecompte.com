@@ -16,7 +16,10 @@ const { Content } = await (entry as any).render();
 const { title } = (entry as any).data;
 ---
 
-<Layout>
+<Layout
+  title=`${title} | JodyLeCompte.com`
+  metaDescription={entry.data.description}
+>
   <article>
     <h1>{title}</h1>
     <Content />
