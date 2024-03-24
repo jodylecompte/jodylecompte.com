@@ -1,7 +1,7 @@
 ---
 title: Why do arrays start with zero?
 description: Have you ever wondered why arrays in programming always seem to start at zero? It’s more than just a quirk; it’s a convention deeply rooted in programming of time long past. Let’s peel back the onion on the historical reasonings of how this convention began.
-postedDate: 2024-03-01T05:00:00-06:00
+postedDate: 2024-03-20T05:00:00-06:00
 ---
 
 ![A starry night sky.](../../images/posts/arrayzero.webp)
