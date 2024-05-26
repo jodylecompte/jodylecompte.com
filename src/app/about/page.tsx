@@ -69,58 +69,55 @@ export default function About() {
         </div>
         <div className="lg:order-first lg:row-span-2">
           <h1 className="text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
-            I’m Spencer Sharp. I live in New York City, where I design the
-            future.
+            I’m Jody LeCompte, an unapologetically nerdy software developer from South Louisiana.
           </h1>
           <div className="mt-6 space-y-7 text-base text-zinc-600 dark:text-zinc-400">
             <p>
-              I’ve loved making things for as long as I can remember, and wrote
-              my first program when I was 6 years old, just two weeks after my
-              mom brought home the brand new Macintosh LC 550 that I taught
-              myself to type on.
+              I was introduced to web development at an extremely early age by my dad, who
+              taught me the basics of HTML and helped me to build my Pokemon themed website.
+              I was hooked instantly.
             </p>
             <p>
-              The only thing I loved more than computers as a kid was space.
-              When I was 8, I climbed the 40-foot oak tree at the back of our
-              yard while wearing my older sister’s motorcycle helmet, counted
-              down from three, and jumped — hoping the tree was tall enough that
-              with just a bit of momentum I’d be able to get to orbit.
+              Fast forward a couple of years, I was introduced to NeoPets by some school friends
+              and realized how small my fishbowl was. My understanding was limited to boxes
+              of boxes and changing their color, and an exceptionally masterful use of marquee.
+              How is this login working? How does the site remember how many neopoints I have?
+              What does a .phtml extension mean?
             </p>
             <p>
-              I spent the next few summers indoors working on a rocket design,
-              while I recovered from the multiple surgeries it took to fix my
-              badly broken legs. It took nine iterations, but when I was 15 I
-              sent my dad’s Blackberry into orbit and was able to transmit a
-              photo back down to our family computer from space.
+              This lead me to discover PHP and things snowballed from there. I spent my teenage
+              years soaking up as much knowledge as I could and preferred building and creating
+              to most other activities. In an extremely ironic twist, a friend I made on NeoPets
+              years before contacted me about a PHP gig which officially launched my professional
+              career.
             </p>
             <p>
-              Today, I’m the founder of Planetaria, where we’re working on
-              civilian space suits and manned shuttle kits you can assemble at
-              home so that the next generation of kids really <em>can</em> make
-              it to orbit — from the comfort of their own backyards.
+              Today, I'm quickly approaching my ten year anniversary in the industry and I've
+              had the privilege of working with some really great and talented people along the way
+              and work in a multitude of technology and stack options. I love learning new things
+              and experimenting with new technology, but most of my work the last few years has been
+              centered around JavaScript technologies and writing full-stack software in TypeScript,
+              React or Angular, and Node. 
             </p>
           </div>
         </div>
         <div className="lg:pl-20">
           <ul role="list">
-            <SocialLink href="#" icon={XIcon}>
+            <SocialLink href="https://x.com/jody_lecompte" icon={XIcon}>
               Follow on X
             </SocialLink>
-            <SocialLink href="#" icon={InstagramIcon} className="mt-4">
-              Follow on Instagram
-            </SocialLink>
-            <SocialLink href="#" icon={GitHubIcon} className="mt-4">
+            <SocialLink href="https://github.com/jodyleompte" icon={GitHubIcon} className="mt-4">
               Follow on GitHub
             </SocialLink>
-            <SocialLink href="#" icon={LinkedInIcon} className="mt-4">
+            <SocialLink href="https://linkedin.com/in/jodylecompte" icon={LinkedInIcon} className="mt-4">
               Follow on LinkedIn
             </SocialLink>
             <SocialLink
-              href="mailto:spencer@planetaria.tech"
+              href="mailto:jody@jodylecompte.com"
               icon={MailIcon}
               className="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
             >
-              spencer@planetaria.tech
+              jody@jodylecompte.com
             </SocialLink>
           </ul>
         </div>

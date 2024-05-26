@@ -35,7 +35,7 @@ export function Footer() {
                 <NavLink href="/uses">Accessibility</NavLink>
               </div>
               <p className="text-sm text-zinc-400 dark:text-zinc-500">
-                &copy; {new Date().getFullYear()} JodyLeCompte. All rights
+                &copy; {new Date().getFullYear()} Jody LeCompte. All rights
                 reserved.
               </p>
             </div>
