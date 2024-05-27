@@ -6,7 +6,6 @@ import clsx from 'clsx'
 import { Container } from '@/components/Container'
 import {
   GitHubIcon,
-  InstagramIcon,
   LinkedInIcon,
   XIcon,
 } from '@/components/SocialIcons'
@@ -50,7 +49,7 @@ function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 export const metadata: Metadata = {
   title: 'About',
   description:
-    'I’m Spencer Sharp. I live in New York City, where I design the future.',
+    'I’m Jody LeCompte, an unapologetically nerdy software developer from South Louisiana.',
 }
 
 export default function About() {
@@ -97,7 +96,7 @@ export default function About() {
               and work in a multitude of technology and stack options. I love learning new things
               and experimenting with new technology, but most of my work the last few years has been
               centered around JavaScript technologies and writing full-stack software in TypeScript,
-              React or Angular, and Node. 
+              React or Angular, and Node.
             </p>
           </div>
         </div>
