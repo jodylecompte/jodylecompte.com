@@ -3,47 +3,28 @@ import Image from 'next/image'
 
 import { Card } from '@/components/Card'
 import { SimpleLayout } from '@/components/SimpleLayout'
-import logoAnimaginary from '@/images/logos/animaginary.svg'
-import logoCosmos from '@/images/logos/cosmos.svg'
-import logoHelioStream from '@/images/logos/helio-stream.svg'
-import logoOpenShuttle from '@/images/logos/open-shuttle.svg'
-import logoPlanetaria from '@/images/logos/planetaria.svg'
 
 const projects = [
   {
-    name: 'Planetaria',
+    name: 'Solas Bible Plan',
     description:
-      'Creating technology to empower civilians to explore space on their own terms.',
-    link: { href: 'http://planetaria.tech', label: 'planetaria.tech' },
-    logo: logoPlanetaria,
+      'A one year Bible plan tracker based on Reformation Bible Study plan written by The Solas Council.',
+    link: { href: 'https://solasbibleplan.com', label: 'solasbibleplan.com' },
   },
   {
-    name: 'Animaginary',
+    name: 'The 39 Articles of Religion',
     description:
-      'High performance web animation library, hand-written in optimized WASM.',
-    link: { href: '#', label: 'github.com' },
-    logo: logoAnimaginary,
+      'The 39 Articles of Religion, frequently distributed as a PDF, emphasizing readability and accessibility.',
+    link: { href: 'https://the39articles.com', label: 'the39articles.com' },
   },
   {
-    name: 'HelioStream',
+    name: 'Moment to Luxon Converter',
     description:
-      'Real-time video streaming library, optimized for interstellar transmission.',
-    link: { href: '#', label: 'github.com' },
-    logo: logoHelioStream,
-  },
-  {
-    name: 'cosmOS',
-    description:
-      'The operating system that powers our Planetaria space shuttles.',
-    link: { href: '#', label: 'github.com' },
-    logo: logoCosmos,
-  },
-  {
-    name: 'OpenShuttle',
-    description:
-      'The schematics for the first rocket I designed that successfully made it to orbit.',
-    link: { href: '#', label: 'github.com' },
-    logo: logoOpenShuttle,
+      'A web-based tool for converting Momentjs formatting strings to Luxon formatting strings when converting.',
+    link: {
+      href: 'https://moment-to-luxon.jodylecompte.com',
+      label: 'moment-to-luxon.jodylecompte.com',
+    },
   },
 ]
 
@@ -60,14 +41,14 @@ function LinkIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 export const metadata: Metadata = {
   title: 'Projects',
-  description: 'Things I’ve made trying to put my dent in the universe.',
+  description: 'Things I’ve built to leave my mark on the world.',
 }
 
 export default function Projects() {
   return (
     <SimpleLayout
-      title="Things I’ve made trying to put my dent in the universe."
-      intro="I’ve worked on tons of little projects over the years but these are the ones that I’m most proud of. Many of them are open-source, so if you see something that piques your interest, check out the code and contribute if you have ideas for how it can be improved."
+      title="Things I’ve built to leave my mark on the world."
+      intro="Over the years, I’ve taken on a wide variety of projects that reflect my commitment to growth and problem-solving. These are the ones I’m especially proud of, each crafted to solve real challenges, explore new ideas, or just make life a little easier. Many are open-source, so if any of these resonate, feel free to dive into the code, make suggestions, or add your own contributions!"
     >
       <ul
         role="list"
@@ -75,14 +56,6 @@ export default function Projects() {
       >
         {projects.map((project) => (
           <Card as="li" key={project.name}>
-            <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md shadow-zinc-800/5 ring-1 ring-zinc-900/5 dark:border dark:border-zinc-700/50 dark:bg-zinc-800 dark:ring-0">
-              <Image
-                src={project.logo}
-                alt=""
-                className="h-8 w-8"
-                unoptimized
-              />
-            </div>
             <h2 className="mt-6 text-base font-semibold text-zinc-800 dark:text-zinc-100">
               <Card.Link href={project.link.href}>{project.name}</Card.Link>
             </h2>
