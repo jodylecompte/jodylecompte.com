@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+.container {
+    @apply mx-auto;
+    @apply max-w-7xl;
+    @apply px-6;
+    @apply lg:px-8;
+}
