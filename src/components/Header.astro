@@ -3,8 +3,17 @@ import HeaderLink from "./HeaderLink.astro";
 import { SITE_TITLE } from "../consts";
 ---
 
-<header class="container">
-  <nav>
-    <h1><a href="/">{SITE_TITLE}</a></h1>
+<header class="text-center mx-aut p-4" role="banner">
+  <nav class="p-4 mx-auto" role="navigation" aria-label="Main navigation">
+    <h1 class="site-title text-3xl mx-auto">
+      <a href="/" aria-label="Homepage – Jody LeCompte"> Jody LeCompte </a>
+    </h1>
   </nav>
+
+  <style>
+    header {
+      background: #5386e4;
+      color: #fff;
+    }
+  </style>
 </header>

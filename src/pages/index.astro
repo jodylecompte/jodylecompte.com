@@ -4,7 +4,6 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
 import { getCollection } from "astro:content";
-import FormattedDate from "../components/FormattedDate.astro";
 
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
@@ -19,7 +18,7 @@ const posts = (await getCollection("blog")).sort(
   <body>
     <Header />
     <main>
-      <div class="bg-white py-24 sm:py-32">
+      <div class="bg-white pt-20 pb-40">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <div class="mx-auto">
             <h2
@@ -27,52 +26,28 @@ const posts = (await getCollection("blog")).sort(
             >
               Articles
             </h2>
-            <p class="mt-2 text-lg/8 text-gray-600">
-              Longer form thoughts about software engineering.
+            <p class="mt-5 text-lg/8 text-gray-600">
+              Longer form thoughts about software engineering written by Jody
+              LeCompte.
             </p>
-            <div
-              class="mt-10 space-y-16 border-t border-gray-200 pt-10 sm:mt-16 sm:pt-16"
-            >
+
+            <div class="pace-y-16 border-t border-gray-200 pt-10 mt-5">
               {
                 posts.map((post) => (
-                  <article class="flex max-w-xl flex-col items-start justify-between">
-                    <div class="flex items-center gap-x-4 text-xs">
-                      {post.data.pubDate}
-
-                      <a
-                        href=""
-                        class="relative z-10 rounded-full bg-gray-50 px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100"
-                      >
+                  <article class="flex max-w-xl flex-col items-start justify-between pb-10">
+                    <a
+                      href={`/blog/${post.id}/`}
+                      class="group relative block w-full text-left"
+                    >
+                      <h2 class="mt-3 text-lg/6 font-semibold text-gray-900 group-hover:text-[#5386e4]">
                         {post.data.title}
-                      </a>
-                    </div>
-                    <div class="group relative">
-                      <h3 class="mt-3 text-lg/6 font-semibold text-gray-900 group-hover:text-gray-600">
-                        <a href="">
-                          <span class="absolute inset-0" />
-                          {post.data.title}
-                        </a>
-                      </h3>
-                      <p class="mt-5 line-clamp-3 text-sm/6 text-gray-600">
+                      </h2>
+                      <small>Published {post.data.pubDate}</small>
+                      <p class="mt-5 line-clamp-3 text-sm/6 text-gray-600 group-hover:text-[colorhere]">
                         {post.data.description}
                       </p>
-                    </div>
-                    {/* <div class="relative mt-8 flex items-center gap-x-4">
-                      <img
-                        alt=""
-                        src={post.author.imageUrl}
-                        class="size-10 rounded-full bg-gray-50"
-                      />
-                      <div class="text-sm/6">
-                        <p class="font-semibold text-gray-900">
-                          <a href={post.author.href}>
-                            <span class="absolute inset-0" />
-                            {post.author.name}
-                          </a>
-                        </p>
-                        <p class="text-gray-600">{post.author.role}</p>
-                      </div>
-                    </div> */}
+                      <span class="absolute inset-0" aria-hidden="true" />
+                    </a>
                   </article>
                 ))
               }
