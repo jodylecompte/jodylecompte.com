@@ -2,8 +2,22 @@
 @plugin "@tailwindcss/typography";
 
 .container {
-    @apply mx-auto;
-    @apply max-w-7xl;
-    @apply px-6;
-    @apply lg:px-8;
+  @apply mx-auto;
+  @apply max-w-7xl;
+  @apply px-6;
+  @apply lg:px-8;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
 }
