@@ -1,0 +1,298 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+
+export const article = {
+  author: 'Jody LeCompte',
+  date: '2026-01-04',
+  title: 'Conditonal Form Valdation in Angular Reactive Forms',
+  description: 'Struggling with conditional validation in Angular reactive forms? From valueChanges hacks to form-level validators, this post breaks down the pros, cons, and trade-offs of each approach — so you can write cleaner, smarter forms that scale.'
+}
+
+export const metadata = {
+  title: article.title,
+  description: article.description,
+}
+
+export default (props) => <ArticleLayout article={article} {...props} />
+
+## Introduction
+
+Coming from a React background, template-driven forms never really clicked for me. I was used to defining a schema, wiring up a 
+few props, and hitting the ground running. That said, I’ll admit — there are a few things that template-driven forms make 
+surprisingly easy. Conditional validation logic is one of those things.
+
+```html
+<form #form="ngForm">
+  <input
+    name="email"
+    ngModel
+    [required]="shouldRequireEmail"
+    #email="ngModel"
+  />
+  <div *ngIf="email.invalid && email.touched">Email is required</div>
+</form>
+```
+
+
+These scenarios come up pretty often, and it's a little less clear how to handle the same problem. The most common case is a 
+dependent field that only becomes required if another input value is given or contains a specific value. Let's look at a 
+few ways we can address this and weigh the trade-offs.
+
+## Preface: You might not need conditional validation
+
+Before proceeding any further, it's worth noting that the default Angular behavior is often sufficient without any custom conditional rules.
+
+For example, suppose you have an optional input for a promo code. The promo code isn't required, but any valid input should 
+be at least 6 characters long. This is actually the exact behavior of the `Validators.minLength` validator from `@angular/forms` 
+— it only enforces the minimum length if there's actual input in the form field.
+
+To double check, the best reference is the [Angula Official Validators API reference](https://angular.dev/api/forms/Validators).
+
+## The template
+
+For brevity, all examples will show the applicable code only, and will all utilize the same template shown below.
+
+```html
+<form [formGroup]="exampleForm">
+  <label>
+    Where did you hear about us?
+    <select formControlName="whereSource">
+      <option value="">-- Select one --</option>
+      <option value="Facebook">Facebook</option>
+      <option value="LinkedIn">LinkedIn</option>
+      <option value="Instagram">Instagram</option>
+      <option value="Google">Google</option>
+      <option value="Other">Other</option>
+    </select>
+  </label>
+
+  <div *ngIf="exampleForm.get('whereSource')?.value === 'Other'">
+    <label>
+      Please specify:
+      <input type="text" formControlName="whereOther" />
+    </label>
+    <div
+      *ngIf="exampleForm.get('whereOther')?.invalid && exampleForm.get('whereOther')?.touched"
+    >
+      This field is required.
+    </div>
+  </div>
+
+  <pre>{{ exampleForm.value | json }}</pre>
+  <pre>Valid: {{ exampleForm.valid }}</pre>
+</form>
+```
+
+## Option 1. Imperative Change Watching
+
+The most straightforward approach is to subscribe to value changes on a single form control, then use the `setValidators` 
+method exposed by the `AbstractControl` interface to dynamically add or remove validators. This function accepts the same array
+ of validator methods you would use during form group initialization.
+
+```typescript
+export class ExampleComponent {
+  private fb = inject(FormBuilder);
+
+  exampleForm: FormGroup = this.fb.group({
+    whereSource: [""],
+    whereOther: [""],
+  });
+
+  constructor() {
+    this.exampleForm.get("whereSource")?.valueChanges.subscribe((value) => {
+      const otherControl = this.exampleForm.get("whereOther");
+
+      if (value === "Other") {
+        otherControl?.setValidators([Validators.required]);
+      } else {
+        otherControl?.clearValidators();
+      }
+
+      otherControl?.updateValueAndValidity();
+    });
+  }
+}
+```
+
+Take note of the call to `updateValueAndValidity` — Angular does not run another validation cycle automatically when validators are 
+changed, so this triggers a re-calculation of the input’s valid/invalid status.
+
+### ✅ **Pros**:
+
+- Simple and explicitly clear
+- Easy to expand with other relevant operatons that may not be form specific
+- No setup or architectural changes to existing Angular forms
+
+### ❌ **Cons**:
+
+- Imperative logic spread across componnets
+- Diffcult to test and even more so to reuse 
+- Does not scale well for more complex forms with multiple dependent inputs
+
+## Sidebar About Form Validators
+The next two options leverage reactive form validators, so first I want to point out a few changes here.  When swtching to a custom 
+validator for our mental model, our first thought may be to do something like this: 
+
+```typescript
+function requireOtherIfSourceIsOther(group: AbstractControl): ValidationErrors | null {
+  const source = group.get("whereSource");
+  const other = group.get("whereOther");
+
+  if (source?.value === "Other" && !other?.value) {
+    other?.setErrors({ required: true });
+  } else {
+    other?.setErrors(null);
+  }
+
+  return null;
+}
+```
+
+While this is arguably an improvement over manually subscribing to `valueChanges` and toggling validators (Option 1), 
+it introduces a subtle but important issue: we've slipped back into imperative logic.
+
+At its core, an Angular validator is simply a function that returns either a `ValidationErrors: Record<string, any>` object or `null` 
+if the control is valid. In this example, rather than returning an error, the validator manually sets or clears errors on the control.
+
+The consequence is that controls using this validator may appear valid (because it returns `null`), even though they still 
+have errors manually assigned to them. Depending on how your template is written, this can lead to confusing or inconsistent UI 
+behavior. The goal should be pure validators that don't directly mutate form state.
+
+## Option 2. Input-Level Custom Validator
+
+This approach uses a custom validator attached directly to the `whereOther` control. Instead of imperatively adding or 
+removing validators (Option 1), the logic is pushed into a reusable function that checks if "Other" is selected and applies `Validators.required` 
+when necessary.
+
+```typescript
+export function otherRequiredIfSourceIsOther(control: AbstractControl): ValidationErrors | null {
+  const parent = control.parent;
+  if (!parent) return null;
+
+  const source = parent.get("whereSource")?.value;
+  const other = control.value;
+
+  if (source === "Other" && !other) {
+    return { required: true };
+  }
+
+  return null;
+}
+```
+
+The reference to `control.parent` will always be `null` on the first run. By returning `null`, Angular will start with the component in a valid 
+state. This should be invisible most of the time, but it's something to be aware of.
+
+Applying this validator is the same as using any built-in validator.
+
+```typescript
+export class ExampleComponent {
+  private fb = inject(FormBuilder);
+
+  exampleForm: FormGroup = this.fb.group({
+    whereSource: [""],
+    whereOther: ["", otherRequiredIfSourceIsOther],
+  });
+
+  constructor() {
+    this.exampleForm.get("whereSource")?.valueChanges.subscribe(() => {
+      this.exampleForm.get("whereOther")?.updateValueAndValidity();
+    });
+  }
+}
+```
+
+Let's hone in on the `updateValueAndValidity` call, because this is where your error-handling strategy really matters. 
+Angular doesn't actually know that these fields are co-related, so it won't re-run the validator on the `whereOther` 
+control when `whereSource` changes.
+
+If your strategy is real-time feedback, you'll want to use some version of the above pattern to ensure the dependent 
+field gets re-validated when its sibling changes. If you're doing submit-based error handling, you can usually skip 
+the subscription and just call `updateValueAndValidity` right before checking the form's validity inside your submit 
+handler. Alternatively, for multiple fields, you could subscribe to the `valueChanges` observable of the entire 
+form object.
+
+
+### ✅ **Pros**:
+
+- Completely declrative approach
+- Easier to target with automated testing
+- No manual form state management
+
+### ❌ **Cons**:
+- Tightly coupled to specific components
+- Mixed concerns, validator knows about components other than the one it is validating
+- Repeated logic if multiple dynamic fields
+
+## Option 3. Form Level Custom Validator
+
+Shifting the validation up to the form level only needs minimal changes, and now we recieve a reference to the entire
+form group to load values or form state as needed. 
+
+```typescript
+export function requireOtherIfSourceIsOther(group: AbstractControl): ValidationErrors | null {
+  const source = group.get("whereSource")?.value;
+  const other = group.get("whereOther")?.value;
+
+    if (source === "Other" && !other) {
+    return { otherRequiredIfSourceIsOther: true };
+  }
+
+  return null;
+}
+```
+
+### ✅ **Pros**:
+
+- 100% Declarative and hands off (even validity status)
+- No repeated logic across multiple controls
+- Better separaton of concerns
+
+### ❌ **Cons**:
+- Still tightly coupled
+- Two locations for both validators and error objects can be confusing
+- Non-standard error names can lead to inconsistent naming over time
+
+## Bonus - Fix the Coupling
+
+Normally I'd caution against premature abstraction, but the lift is so light between a one-off 
+validator and a parameterized version that it's worth doing upfront in most cases.
+
+For example:
+
+```typescript
+export function requiredIfSiblingEquals(
+  siblingControlName: string,
+  expectedValue: any
+): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const parent = control.parent;
+    if (!parent) return null;
+
+    const sibling = parent.get(siblingControlName);
+    if (!sibling) return null;
+
+    const siblingValue = sibling.value;
+    const thisValue = control.value;
+
+    return siblingValue === expectedValue && !thisValue
+      ? { required: true }
+      : null;
+  };
+}
+```
+
+Usage just means plugging in your keys and condition:
+
+```typescript  
+exampleForm: FormGroup = this.fb.group({
+  whereSource: [""],
+  whereOther: ["", requiredIfSiblingEquals("whereSource", "Other")],
+});
+```
+
+## Conclusion
+
+What starts as a simple "this field is required if..." quickly becomes a conversation about 
+maintainability and user expeience. The techniques shown here give you options, but they also ask for 
+intentionality. Choose a method not just because it works — but because it fits the shape of your 
+app, your team, and your long-term needs.

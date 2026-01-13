@@ -49,8 +49,7 @@ function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
 
 export const metadata: Metadata = {
   title: 'About',
-  description:
-    'I’m Spencer Sharp. I live in New York City, where I design the future.',
+  description: 'I’m Jody LeCompte. I live in Louisiana and like to build stuff',
 }
 
 export default function About() {
@@ -74,31 +73,41 @@ export default function About() {
           </h1>
           <div className="mt-6 space-y-7 text-base text-zinc-600 dark:text-zinc-400">
             <p>
-              I’ve loved making things for as long as I can remember, and wrote
-              my first program when I was 6 years old, just two weeks after my
-              mom brought home the brand new Macintosh LC 550 that I taught
-              myself to type on.
+              I’m a senior software engineer with a background in modernizing
+              legacy systems and building durable, scalable platforms. Over the
+              years, I’ve worked across the full stack, helping teams transition
+              from brittle, ad-hoc architectures into well-structured systems
+              with clear boundaries, predictable deployments, and faster
+              developer workflows. I care deeply about code quality,
+              maintainability, and the long-term health of the systems people
+              depend on.
             </p>
             <p>
-              The only thing I loved more than computers as a kid was space.
-              When I was 8, I climbed the 40-foot oak tree at the back of our
-              yard while wearing my older sister’s motorcycle helmet, counted
-              down from three, and jumped — hoping the tree was tall enough that
-              with just a bit of momentum I’d be able to get to orbit.
+              Most of my recent work has focused on large TypeScript and Angular
+              codebases, cloud-native infrastructure, and monorepo architecture.
+              I’ve led migrations from legacy technologies into modern
+              frameworks, redesigned CI/CD pipelines, and helped standardize
+              development practices across multiple teams. I enjoy tackling
+              messy problems - especially the kind that sit at the intersection
+              of product, infrastructure, and developer experience.
             </p>
             <p>
-              I spent the next few summers indoors working on a rocket design,
-              while I recovered from the multiple surgeries it took to fix my
-              badly broken legs. It took nine iterations, but when I was 15 I
-              sent my dad’s Blackberry into orbit and was able to transmit a
-              photo back down to our family computer from space.
+              What motivates me most is making complex systems simpler to
+              understand and easier to work with. I believe good engineering is
+              less about clever tricks and more about clarity, consistency, and
+              thoughtful tradeoffs. Whether I’m refactoring a critical service,
+              improving performance, or designing internal tooling, my goal is
+              always the same: reduce friction and make the system more
+              resilient over time.
             </p>
             <p>
-              Today, I’m the founder of Planetaria, where we’re working on
-              civilian space suits and manned shuttle kits you can assemble at
-              home so that the next generation of kids really <em>can</em> make
-              it to orbit — from the comfort of their own backyards.
-            </p>
+              Outside of work, I enjoy hands-on projects that let me build and
+              fix real things, from mechanical restoration projects to learning
+              new tools and techniques. I’m drawn to craftsmanship in all its
+              forms - software included - and I’m always looking for
+              opportunities to learn, improve, and create work I’m proud to
+              stand behind.
+            </p>{' '}
           </div>
         </div>
         <div className="lg:pl-20">
