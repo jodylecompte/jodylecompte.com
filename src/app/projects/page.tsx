@@ -5,12 +5,15 @@ import { SimpleLayout } from '@/components/SimpleLayout'
 
 const projects = [
   {
-    name: 'Planetaria',
+    name: 'Solas Bible Plan',
     description:
-      'Creating technology to empower civilians to explore space on their own terms.',
+      'A one-year reading plan and plan progress tracking app for reading the entire English Bible and all major reformation creeds, confessons, and catechisms.',
     links: [
       { href: 'https://solas.jodylecompte.com', label: 'Live' },
-      { href: 'http://planetaria.t', label: 'Preview' },
+      {
+        href: 'https://github.com/jodylecompte/solas-council-bible-plan',
+        label: 'GitHub',
+      },
     ],
   },
 ]
@@ -49,19 +52,18 @@ export default function Projects() {
 
             <Card.Description>{project.description}</Card.Description>
 
-            <ul className="relative z-10 mt-6 space-y-2">
+            <div className="relative z-10 mt-6 space-y-3">
               {project.links.map((link) => (
-                <li
+                <a
                   key={link.href}
-                  className="flex items-center text-sm font-medium text-zinc-400 transition group-hover:text-teal-500 dark:text-zinc-200"
+                  href={link.href}
+                  className="flex items-center text-sm font-medium text-zinc-400 transition-colors hover:text-teal-500 dark:text-zinc-200"
                 >
                   <LinkIcon className="h-5 w-5 flex-none" />
-                  <Card.Link href={link.href} className="ml-2">
-                    {link.label}
-                  </Card.Link>
-                </li>
+                  <span className="ml-2">{link.label}</span>
+                </a>
               ))}
-            </ul>
+            </div>
           </Card>
         ))}
       </ul>
