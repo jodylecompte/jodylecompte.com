@@ -5,6 +5,18 @@ import { SimpleLayout } from '@/components/SimpleLayout'
 
 const projects = [
   {
+    name: 'Greek Alphabet Trainer',
+    description:
+      'A one-year reading plan and plan progress tracking app for reading the entire English Bible and all major reformation creeds, confessons, and catechisms.',
+    links: [
+      { href: 'https://greekalphabettrainer.com', label: 'Live' },
+      {
+        href: 'https://github.com/jodylecompte/greekalphabettrainer.com',
+        label: 'GitHub',
+      },
+    ],
+  },
+  {
     name: 'Solas Bible Plan',
     description:
       'A one-year reading plan and plan progress tracking app for reading the entire English Bible and all major reformation creeds, confessons, and catechisms.',
