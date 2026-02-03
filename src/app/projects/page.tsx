@@ -5,6 +5,18 @@ import { SimpleLayout } from '@/components/SimpleLayout'
 
 const projects = [
   {
+    name: 'One Less Board',
+    description:
+      'A quick and simple cut optimizer for boards in woodworking projects with scrap management.',
+    links: [
+      { href: 'https://onelessboard.com', label: 'Live' },
+      {
+        href: 'https://github.com/jodylecompte/one-less-board',
+        label: 'GitHub',
+      },
+    ],
+  },
+  {
     name: 'Greek Alphabet Trainer',
     description:
       'Quick and adaptive quizes to master the Greek alphabet quickly before beginning language study.',
