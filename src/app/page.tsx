@@ -1,5 +1,6 @@
 import Image, { type ImageProps } from 'next/image'
 import Link from 'next/link'
+
 import clsx from 'clsx'
 
 import { Button } from '@/components/Button'
@@ -83,6 +84,19 @@ function Article({ article }: { article: ArticleWithSlug }) {
         {formatDate(article.date)}
       </Card.Eyebrow>
       <Card.Description>{article.description}</Card.Description>
+      {article.tags && article.tags.length > 0 && (
+        <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
+          {article.tags.map((tag) => (
+            <Link
+              key={tag}
+              href={`/tags/${tag}`}
+              className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:bg-teal-50 hover:text-teal-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-teal-900/30 dark:hover:text-teal-400"
+            >
+              #{tag}
+            </Link>
+          ))}
+        </div>
+      )}
       <Card.Cta>Read article</Card.Cta>
     </Card>
   )

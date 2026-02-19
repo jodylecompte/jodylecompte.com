@@ -1,10 +1,27 @@
 import { type Metadata } from 'next'
-import Link from 'next/link'
+import { notFound } from 'next/navigation'
 
 import { Card } from '@/components/Card'
 import { SimpleLayout } from '@/components/SimpleLayout'
-import { type ArticleWithSlug, getAllArticles } from '@/lib/articles'
+import { getAllTags, getArticlesByTag, type ArticleWithSlug } from '@/lib/articles'
 import { formatDate } from '@/lib/formatDate'
+
+export async function generateStaticParams() {
+  const tags = await getAllTags()
+  return tags.map(({ tag }) => ({ tag }))
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tag: string }>
+}): Promise<Metadata> {
+  const { tag } = await params
+  return {
+    title: `#${tag}`,
+    description: `Articles tagged ${tag}`,
+  }
+}
 
 function Article({ article }: { article: ArticleWithSlug }) {
   return (
@@ -22,19 +39,6 @@ function Article({ article }: { article: ArticleWithSlug }) {
           {formatDate(article.date)}
         </Card.Eyebrow>
         <Card.Description>{article.description}</Card.Description>
-        {article.tags && article.tags.length > 0 && (
-          <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
-            {article.tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/tags/${tag}`}
-                className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 hover:bg-teal-50 hover:text-teal-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-teal-900/30 dark:hover:text-teal-400"
-              >
-                #{tag}
-              </Link>
-            ))}
-          </div>
-        )}
         <Card.Cta>Read article</Card.Cta>
       </Card>
       <Card.Eyebrow
@@ -48,19 +52,22 @@ function Article({ article }: { article: ArticleWithSlug }) {
   )
 }
 
-export const metadata: Metadata = {
-  title: 'Articles',
-  description:
-    'Writing about building software, learning things, and figuring stuff out.',
-}
+export default async function TagPage({
+  params,
+}: {
+  params: Promise<{ tag: string }>
+}) {
+  const { tag } = await params
+  const articles = await getArticlesByTag(tag)
 
-export default async function ArticlesIndex() {
-  let articles = await getAllArticles()
+  if (articles.length === 0) {
+    notFound()
+  }
 
   return (
     <SimpleLayout
-      title="Writing about building software, learning things, and figuring stuff out."
-      intro="A collection of tutorials, project write-ups, experiments, and general reflections from building and maintaining software."
+      title={`#${tag}`}
+      intro={`${articles.length} ${articles.length === 1 ? 'article' : 'articles'} tagged with ${tag}.`}
     >
       <div className="md:border-l md:border-zinc-100 md:pl-6 md:dark:border-zinc-700/40">
         <div className="flex max-w-3xl flex-col space-y-16">
