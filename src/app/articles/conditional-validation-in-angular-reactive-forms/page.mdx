@@ -3,7 +3,7 @@ import { ArticleLayout } from '@/components/ArticleLayout'
 export const article = {
   author: 'Jody LeCompte',
   date: '2026-01-04',
-  title: 'Conditonal Form Valdation in Angular Reactive Forms',
+  title: 'Conditional Form Validation in Angular Reactive Forms',
   description:
     'Struggling with conditional validation in Angular reactive forms? From valueChanges hacks to form-level validators, this post breaks down the pros, cons, and trade-offs of each approach — so you can write cleaner, smarter forms that scale.',
   tags: ['angular', 'typescript', 'forms'],
@@ -46,7 +46,7 @@ For example, suppose you have an optional input for a promo code. The promo code
 be at least 6 characters long. This is actually the exact behavior of the `Validators.minLength` validator from `@angular/forms`
 — it only enforces the minimum length if there's actual input in the form field.
 
-To double check, the best reference is the [Angula Official Validators API reference](https://angular.dev/api/forms/Validators).
+To double check, the best reference is the [Angular Official Validators API reference](https://angular.dev/api/forms/Validators).
 
 ## The template
 
@@ -120,18 +120,18 @@ changed, so this triggers a re-calculation of the input’s valid/invalid status
 ### ✅ **Pros**:
 
 - Simple and explicitly clear
-- Easy to expand with other relevant operatons that may not be form specific
+- Easy to expand with other relevant operations that may not be form specific
 - No setup or architectural changes to existing Angular forms
 
 ### ❌ **Cons**:
 
-- Imperative logic spread across componnets
-- Diffcult to test and even more so to reuse
+- Imperative logic spread across components
+- Difficult to test and even more so to reuse
 - Does not scale well for more complex forms with multiple dependent inputs
 
 ## Sidebar About Form Validators
 
-The next two options leverage reactive form validators, so first I want to point out a few changes here. When swtching to a custom
+The next two options leverage reactive form validators, so first I want to point out a few changes here. When switching to a custom
 validator for our mental model, our first thought may be to do something like this:
 
 ```typescript
@@ -219,7 +219,7 @@ form object.
 
 ### ✅ **Pros**:
 
-- Completely declrative approach
+- Completely decorative approach
 - Easier to target with automated testing
 - No manual form state management
 
@@ -231,7 +231,7 @@ form object.
 
 ## Option 3. Form Level Custom Validator
 
-Shifting the validation up to the form level only needs minimal changes, and now we recieve a reference to the entire
+Shifting the validation up to the form level only needs minimal changes, and now we receive a reference to the entire
 form group to load values or form state as needed.
 
 ```typescript
@@ -253,7 +253,7 @@ export function requireOtherIfSourceIsOther(
 
 - 100% Declarative and hands off (even validity status)
 - No repeated logic across multiple controls
-- Better separaton of concerns
+- Better separation of concerns
 
 ### ❌ **Cons**:
 
@@ -302,6 +302,6 @@ exampleForm: FormGroup = this.fb.group({
 ## Conclusion
 
 What starts as a simple "this field is required if..." quickly becomes a conversation about
-maintainability and user expeience. The techniques shown here give you options, but they also ask for
+maintainability and user experience. The techniques shown here give you options, but they also ask for
 intentionality. Choose a method not just because it works — but because it fits the shape of your
 app, your team, and your long-term needs.

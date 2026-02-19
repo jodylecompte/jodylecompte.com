@@ -1,0 +1,142 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+import { SideBySideImages } from '@/components/SideBySideImages'
+import highDefImage from './highdef.jpg'
+import lowDefImage from './lowdef.jpg'
+
+export const article = {
+  author: 'Jody LeCompte',
+  date: '2026-02-19',
+  title: "That's It? Running a Local LLM in 2026",
+  description:
+    "Running a LLM doesn't have to be relegated to the cloud or per-token pricing. Local models are better, our machines are more powerful, and it's easier than ever. With the right setup, you can build practical AI workflows entirely on your own hardware.",
+  track: 'learning-ai-in-public',
+}
+
+export const metadata = {
+  title: article.title,
+  description: article.description,
+}
+
+export default (props) => <ArticleLayout article={article} {...props} />
+
+## Introduction
+
+I set up a local LLM today. My immediate reaction was, "That is it?"
+
+As a preface, I cannot fully explain why, other than general advancement and ecosystem
+development. The last time I tried to run a local LLM was probably in 2019 or 2020, and
+the experience was bad.
+
+I do not remember the exact hardware I was using at the time, but I recall having to
+choose between CPU based and GPU based operations. Most of the documentation suggested
+that a GPU bound workload was necessary.
+
+Quick aside: To underscore how literal "learning AI in public" is, if it was not
+already obvious, I am not even sure I am using the correct terminology. In fact,
+I am certain that I am not.
+
+I never actually got anything working locally. That was probably the moment I
+started sleeping on AI, because I soon began a new role and started working with
+a large amount of new JavaScript and TypeScript based technology. I stopped
+experimenting with AI and machine learning altogether.
+
+Does that experience sound familiar?
+
+## I Just Googled It 🤷
+
+I want to write more in-depth on some side projects I'm working on right now, but for brevity
+here, I needed a local LLM to process some bulk PDFs for another project I'm working on. The
+cheapest cloud models were cost prohibitive because of scale and budget.
+
+A few folks on Linkedin encouraged me to try a smaller local LLM and I quickly realized
+I had no choice. The problem could only be unblocked by LLM pre-processing. But I didn't
+even know what it meant for a model to be "smaller". My view of LLMs were a black box.
+
+Credit Card + Question + [LLM] = Answer
+
+So I just Googled it, and I'm going to attempt to distill in my own words how parameters
+work in "Software Developer" not "AI researcher", but also show where I had incomplete or
+incorrect thought processes along the way.
+
+## What is a parameter?
+
+"A parameter is just a number that is applied by a squishy function to produce an output"
+
+...
+
+Well, that certainly doesn't bring back memories of learning Haskell at all.
+
+Getting into the specifics of how training data leads to specific changes to weights or biases
+and the functional difference besides weights being calculated first then biases is
+a bit out of scope both of this article but also my knowledge, but in short, the parameters are
+just the numeric representations of those weights and biases from training.
+
+So my mind immediately went to imagining images and pixels.
+
+<SideBySideImages
+  leftImage={lowDefImage}
+  leftAlt="A low-definition image example"
+  rightImage={highDefImage}
+  rightAlt="A high-definition image example"
+/>
+
+The lower definition image has less pixels and less information to show than the higher
+definition image, emphasized by making them the same size. That works, to a degree, but
+it's not complete. It's a 2D example of a 3D model, where based on the training data, peaks
+and valleys form. Each parameter is a different point that may be raised or lowered.
+
+I cannot take credit because it came from asking ChatGPT to poke holes in my understanding up
+to that point, but ChatGPT compared it to then dropping a marble and it "rolling" to the
+most statistically likely correct next answer.
+
+This better illustrated the hole in my understanding that it wasn't as simple as more
+parameters means holding more facts. I was still thinking of it as a lookup in a blackbox
+database. Apparently the term for this is a "probability plane model", but that'll be
+another study session for another day.
+
+## Which model should I use?
+
+I suspect there will be a lot of trial and error and I don't have anything meaningful to
+add at this time, but I asked ChatGPT to help me compare my options and make a quick choice.
+
+| Model        | Parameters | RAM (4-bit)  | CPU Speed   | JSON Reliability | Instruction Following | Best Use Case                       |
+| ------------ | ---------- | ------------ | ----------- | ---------------- | --------------------- | ----------------------------------- |
+| Llama 3.2 3B | 3B         | ~2.5 to 3 GB | Fast        | Good             | Good                  | General small agent tasks           |
+| Qwen2.5 3B   | 3B         | ~2 to 3 GB   | Fast        | Very Good        | Very Good             | Classification, structured output   |
+| Mistral 7B   | 7B         | ~5 to 6 GB   | Medium      | Very Good        | Very Good             | Light reasoning, nuanced decisions  |
+| Llama 3.1 8B | 8B         | ~6 to 8 GB   | Medium-Slow | Excellent        | Excellent             | Heavier reasoning and complex tasks |
+
+I've been experimenting with Qwen 2.5 3B because my main constraint is going to be RAM
+then GPU on my current hardware, but RAM consumption has not been outrageous and I'll
+probably start comparing Llama 3.2 3b and 3.1 8B. I'm curious to see how the output and
+consistency between the two compares given identical prompts.
+
+Because I don't want to just assume 2.5x parameters means 2.5x better as that is likely
+an oversimplification, and I think we should always aim to use the smallest and least resource
+intensive model available to get a specific task done to the correctness requirements, the
+same way we would have optimized our code before AI.
+
+## The Actual Setup
+
+```
+curl -fsSL https://ollama.com/install.sh | sh # Install Ollama
+ollama serve &
+
+ollama pull llama3.2:3b
+ollama run llama3.2:3b "Write a short story about being the first self-hosted LLM on this machine"
+```
+
+## That's it!
+
+Yep, that's it!
+
+It may seem like I forgot to write that last section before shipping this off, but I
+just wanted to drive home one last time both how wrong I was about running a self-hosted
+LLM on "average consumer hardware" (~$1000 dollar Thinkpad E14 in this case) not being a viable solution.
+
+I thought it wouldn't even be worth the hassle to install, wrong, and I also believed it wouldn't
+produce worthwhile results. Yet here I am sitting here having a lot of fun giving it increasingly
+harder and harder prompts to try to see where and on what sorts of stuff it fails.
+
+Give it a shot, and if you have the extra resources available, maybe just jump straight to giving
+Llama 3 70B Instruct or Mistral XL.
