@@ -22,8 +22,8 @@ export default async function TracksIndex() {
 
   return (
     <SimpleLayout
-      title="Curated learning tracks."
-      intro="Structured sequences of articles that guide you through a topic from start to finish."
+      title="Blog Tracks"
+      intro="I am experimenting with tracks as a middle ground between tags and full series, giving bigger ideas room to unfold post by post."
     >
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
         {tracksWithCounts.map((track) => (
