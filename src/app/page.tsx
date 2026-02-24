@@ -82,8 +82,8 @@ function Article({ article }: { article: ArticleWithSlug }) {
         {article.title}
       </Card.Title>
       <Card.Eyebrow as="time" dateTime={article.date} decorate>
-        {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
-        {formatReadingTime(article.readingTimeMinutes)}
+        <span>{formatDate(article.date)}</span>
+        <span>{formatReadingTime(article.readingTimeMinutes)}</span>
       </Card.Eyebrow>
       <Card.Description>{article.description}</Card.Description>
       {article.tags && article.tags.length > 0 && (

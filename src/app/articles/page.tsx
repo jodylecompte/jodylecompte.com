@@ -20,8 +20,8 @@ function Article({ article }: { article: ArticleWithSlug }) {
           className="md:hidden"
           decorate
         >
-          {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
-          {formatReadingTime(article.readingTimeMinutes)}
+          <span>{formatDate(article.date)}</span>
+          <span>{formatReadingTime(article.readingTimeMinutes)}</span>
         </Card.Eyebrow>
         <Card.Description>{article.description}</Card.Description>
         {article.tags && article.tags.length > 0 && (
