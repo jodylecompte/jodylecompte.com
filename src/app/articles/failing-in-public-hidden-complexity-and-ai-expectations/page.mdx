@@ -35,15 +35,15 @@ Second, readability. After you finally track these works down, they are usually 
 
 I was trying to turn those PDFs into actual data. A defined schema, a relational database, explicit chapter boundaries, paragraphs that are semantically paragraphs and not text nodes with padding. Headings needed to be properly identified. Footnotes would be attached to the sentence they belong to, not floating at the bottom of a page because that is how the PDF happened to lay them out.
 
-I did not just want """looks like a book.""" I wanted it to feel like Jonathan Edwards had written _Sinners in the Hands of an Angry God_ directly in markdown for a web-first experience.
+I did not want just "looks like a book". I wanted it to feel like Jonathan Edwards had written _Sinners in the Hands of an Angry God_ directly in markdown for a web-first experience.
 
 Correctness was the most important factor. No compromise. And correctness is precisely where everything began to unravel.
 
 ## Constraint Reminder
 
-Just for context: at the time of writing this, I am unemployed. I am job searching full time and learning AI tools on the side. One of the goals of the """Learning AI in Public""" series is to test what is actually viable when you do not have unlimited time, unlimited credits, or a company expense account behind you.
+Just for context: at the time of writing this, I am unemployed. I am job searching full time and learning AI tools on the side. One of the goals of the "Learning AI in Public" series is to test what is actually viable when you do not have unlimited time, unlimited credits, or a company expense account behind you.
 
-If you are already thinking, """Why didn't you just use [insert model here]? That would have made this a non issue,""" you are not wrong.
+If you are already thinking, "Why didn't you just use [insert model here]? That would have made this a non issue," you are not wrong.
 
 This likely would have been easier with a larger hosted model.
 
@@ -130,18 +130,7 @@ By that point, I had also already made an early compromise to manually write met
       "startPage": 48,
       "endPage": 50
     },
-    {
-      "number": 4,
-      "title": "To the Lady Earlstoun",
-      "startPage": 51,
-      "endPage": 51
-    },
-    {
-      "number": 5,
-      "title": "For Marion M'Knaught",
-      "startPage": 52,
-      "endPage": 54
-    }
+    // ... remaining chapters
   ]
 }
 
@@ -159,7 +148,7 @@ The problem I described to myself was simple. The problem I actually had was not
 
 A language model still seemed like the right tool. Reading raw text and identifying semantic structure is exactly what language models do. What is a heading, what is a paragraph, what is a stanza. It is not a reasoning problem. It is not a domain knowledge problem. It is a language problem, and a fairly shallow one at that.
 
-That is why a small local model felt like enough. You do not need a frontier model to tell a heading from a paragraph. Getting one running locally for this project was the subject of my [That's It? Running a Local LLM in 2026](https://www.jodylecompte.com/articles/thats-it-local-llm-in-2026).
+That is why a small local model felt like enough. You do not need a frontier model to tell a heading from a paragraph. Getting one running locally for this project was the subject of the first post in this track, [That's It? Running a Local LLM in 2026](https://www.jodylecompte.com/articles/thats-it-local-llm-in-2026).
 
 ## It Worked on the First Few Pages
 
@@ -194,7 +183,7 @@ understand what was happening.
 The first test was simple: run the pipeline on eight pages out of the fifty-four page document. It worked!
 
 The first eight pages looked right. Two chapters, thirty-seven blocks, footnotes attached where they belonged. The JSON conformed to the schema, nothing crashed,
-and a quick inspection did not reveal anything obviously broken. It was enough to convince me that the normalization step was basically solved.
+and a quick inspection didn't reveal anything obviously broken. It was enough to convince me that the normalization step was basically solved.
 
 Then I ran the full document. Chunks two through seven returned chapters with empty blocks arrays. The structure was technically valid, the JSON parsed, the
 schema validated, but the content was gone. No errors, no exceptions, just clean, empty output flowing through the pipeline. That was the first moment I realized I
@@ -209,9 +198,10 @@ that mental model, which was the problem. The test did not accurately represent 
 
 Pages nine through fifty-four are different.
 
-The first chunk happened to include an explicit section boundary. The rest of the document did not. By chunking the PDF into eight-page windows, I had quietly introduced artificial boundaries into a text that did not contain them. The model was not failing to recognize structure. I was asking it to invent structure at arbitrary cut points and then maintain continuity across them without actually giving it continuity.
+The first chunk happened to include an explicit section boundary. The rest of the document didn't. By chunking the PDF into eight-page windows, I had quietly introduced artificial boundaries into the text. The model was not failing to recognize structure. I was asking it to invent structure at arbitrary cut points and then maintain continuity across them without actually giving it continuity.
 
-That was not a prompting issue. It was an architectural one.
+Just Prompt Better(&trade;) wasn't going to save me. My architecture was fundamentally wrong, I just
+didn't know it yet.
 
 There was also a footnote problem I hadn't fully accounted for. This particular PDF uses inline numeric markers attached directly to words,
 e.g.`vail20`, `marrow21`, `casten22`, with the definitions sitting at the bottom of each page in a specific layout. To handle footnotes
@@ -323,7 +313,7 @@ author field was hallucinated. The title was truncated. The structure was close 
 plausible but incorrect in all the ways that mattered.
 
 All three failures point to the same issue. The heuristic approach broke because it lacked capability;
-it simply could not infer semantic structure. The LLM approach broke for the opposite reason: it had the
+it just couldn't infer semantic structure. The LLM approach broke for the opposite reason: it had the
 capability, but no controllable guarantee that the output would conform exactly to the structure
 required. I traded a weakness in intelligence and rigidity for an intelligence with no rigidity or
 guardrails in its output.
@@ -532,26 +522,26 @@ Here is what actually went wrong, in concrete terms:
 - Chapter boundaries were inferred even when curated metadata already existed, which introduced unnecessary model dependency and chunk continuity issues.
 - Footnote extraction required five sub-operations, all embedded inside a single generation request, increasing ambiguity and error surface.
 - Inline marker normalization depended on correct association before validation could detect structural drift.
-- Eight-page chunking introduced artificial boundaries into prose that had none, which broke continuity across batches.
+- Eight-page chunking introduced artificial boundaries into the text, which broke continuity across batches.
 - Context window sizing directly affected cost, latency, and token truncation risk.
 - CPU-only inference limited throughput and increased retry cost.
 - Constrained decoding guaranteed structural validity while exposing weaknesses in semantic classification.
 - Validation rules confirmed schema compliance without verifying semantic completeness.
 
-Each of these decisions made sense at the time. None were reckless. All were incremental. Taken together, though, they
-produced a system that was harder to reason about than it needed to be.
+Each of these decisions made sense at the time. It makes me wonder how much the velocity of AI assisted development
+will cause things to be missed, not because of poor AI quality or operator negligence, but because some issues evolve
+slowly in codebases and bad decisions now snowball much faster.
 
-Somewhere between malformed JSON and empty chapter arrays, I realized I was no longer just debugging a pipeline. I had automated
-discovery that was already deterministic and handed boundary decisions to a probabilistic system that could never truly own them.
+I am not discouraged by how this ended. Definitely humbled, maybe a little frustrated, but mostly determined. We can
+generate code faster than ever, yet there I was fighting a broken prototype. I feel better prepared to tackle the
+problem, and I think I can make it work without resorting to hosted models or loosening constraints.
 
-I am not discouraged by how this ended. Frustrated and humbled, yes, but not discouraged. Breaking the system and tracing every
-assumption back to its source clarified something important: judgment cannot be abstracted away. Theologos is still on my desk.
-The PDFs are still messy. The metadata is still there. The difference now is clarity about responsibility.
+I will need to narrow the scope. The metadata will remain organic, grass fed, and written by humans. That is about all
+I have decided so far. With some work and some luck, there may be a part two where I describe my redemption arc to a working
+pipeline.
 
-The next version of this pipeline will be narrower in scope and firmer in its boundaries. Chapters will come from metadata. Chunking
-will respect real divisions. The model will classify and structure text, not invent architecture. Deterministic where it can be,
-probabilistic where it makes sense to be.
+The moral of the story is twofold.
 
-If there is a lesson here, it is that intelligence without constraint produces opacity, and opacity scales faster than understanding.
-The rebuild will be smaller, simpler, and easier to reason about. And when it finally works, it will not feel like magic. It will
-feel earned.
+In the age of AI and rapid prototyping, we have to be even more diligent about breaking down problems. The rule of thumb in my career has been that if you cannot solve a problem, break it into two. If you still cannot solve it, break it down again. That advice shifts in an AI first workflow, which leads to the second moral.
+
+Intelligence without specific constraints produces an opaque system, and opacity scales faster than understanding. I realize I am preaching to the choir. I do not say this to share something new, but because we may not yet grasp how deep that rabbit hole goes.
