@@ -5,6 +5,7 @@ import { Card } from '@/components/Card'
 import { SimpleLayout } from '@/components/SimpleLayout'
 import { type ArticleWithSlug, getAllArticles } from '@/lib/articles'
 import { formatDate } from '@/lib/formatDate'
+import { formatReadingTime } from '@/lib/readingTime'
 
 function Article({ article }: { article: ArticleWithSlug }) {
   return (
@@ -19,7 +20,8 @@ function Article({ article }: { article: ArticleWithSlug }) {
           className="md:hidden"
           decorate
         >
-          {formatDate(article.date)}
+          {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+          {formatReadingTime(article.readingTimeMinutes)}
         </Card.Eyebrow>
         <Card.Description>{article.description}</Card.Description>
         {article.tags && article.tags.length > 0 && (
@@ -42,7 +44,8 @@ function Article({ article }: { article: ArticleWithSlug }) {
         dateTime={article.date}
         className="mt-1 max-md:hidden"
       >
-        {formatDate(article.date)}
+        {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+        {formatReadingTime(article.readingTimeMinutes)}
       </Card.Eyebrow>
     </article>
   )

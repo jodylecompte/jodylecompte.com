@@ -14,6 +14,7 @@ import {
 } from '@/components/SocialIcons'
 import { type ArticleWithSlug, getAllArticles } from '@/lib/articles'
 import { formatDate } from '@/lib/formatDate'
+import { formatReadingTime } from '@/lib/readingTime'
 
 function MailIcon(props: React.ComponentPropsWithoutRef<'svg'>) {
   return (
@@ -81,7 +82,8 @@ function Article({ article }: { article: ArticleWithSlug }) {
         {article.title}
       </Card.Title>
       <Card.Eyebrow as="time" dateTime={article.date} decorate>
-        {formatDate(article.date)}
+        {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+        {formatReadingTime(article.readingTimeMinutes)}
       </Card.Eyebrow>
       <Card.Description>{article.description}</Card.Description>
       {article.tags && article.tags.length > 0 && (

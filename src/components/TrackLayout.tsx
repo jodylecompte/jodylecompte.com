@@ -4,6 +4,7 @@ import { Prose } from '@/components/Prose'
 import { type ArticleWithSlug, getArticlesByTrack } from '@/lib/articles'
 import { type TrackWithSlug } from '@/lib/tracks'
 import { formatDate } from '@/lib/formatDate'
+import { formatReadingTime } from '@/lib/readingTime'
 
 function TrackArticle({ article }: { article: ArticleWithSlug }) {
   return (
@@ -18,7 +19,8 @@ function TrackArticle({ article }: { article: ArticleWithSlug }) {
           className="md:hidden"
           decorate
         >
-          {formatDate(article.date)}
+          {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+          {formatReadingTime(article.readingTimeMinutes)}
         </Card.Eyebrow>
         <Card.Description>{article.description}</Card.Description>
         <Card.Cta>Read article</Card.Cta>
@@ -28,7 +30,8 @@ function TrackArticle({ article }: { article: ArticleWithSlug }) {
         dateTime={article.date}
         className="mt-1 max-md:hidden"
       >
-        {formatDate(article.date)}
+        {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+        {formatReadingTime(article.readingTimeMinutes)}
       </Card.Eyebrow>
     </article>
   )

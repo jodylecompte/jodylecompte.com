@@ -4,25 +4,41 @@ import { BackButton } from '@/components/BackButton'
 import { Container } from '@/components/Container'
 import { Prose } from '@/components/Prose'
 import { TrackHeader } from '@/components/TrackHeader'
-import { type ArticleWithSlug } from '@/lib/articles'
+import { getAllArticles, type ArticleWithSlug } from '@/lib/articles'
 import { getTrack } from '@/lib/tracks'
 import { formatDate } from '@/lib/formatDate'
+import { formatReadingTime } from '@/lib/readingTime'
 
 export async function ArticleLayout({
   article,
   children,
 }: {
-  article: ArticleWithSlug
+  article: Omit<ArticleWithSlug, 'slug' | 'readingTimeMinutes'> &
+    Partial<Pick<ArticleWithSlug, 'slug' | 'readingTimeMinutes'>>
   children: React.ReactNode
 }) {
-  const track = article.track ? await getTrack(article.track) : null
+  const matchedArticle =
+    article.readingTimeMinutes === undefined
+      ? (await getAllArticles()).find(
+          (candidate) =>
+            candidate.title === article.title &&
+            candidate.date === article.date,
+        )
+      : undefined
+  const readingTimeMinutes =
+    article.readingTimeMinutes ?? matchedArticle?.readingTimeMinutes ?? 1
+  const tracks = await Promise.all(
+    (article.tracks ?? []).map((slug) => getTrack(slug)),
+  ).then((results) => results.filter((t) => t !== null))
 
   return (
     <Container className="mt-16 lg:mt-32">
       <div className="xl:relative">
         <div className="mx-auto max-w-2xl">
           <BackButton />
-          {track && <TrackHeader track={track} />}
+          {tracks.map((track) => (
+            <TrackHeader key={track.slug} track={track} />
+          ))}
           <article>
             <header className="flex flex-col">
               <h1 className="mt-6 text-4xl font-bold tracking-tight text-zinc-800 sm:text-5xl dark:text-zinc-100">
@@ -33,7 +49,10 @@ export async function ArticleLayout({
                 className="order-first flex items-center text-base text-zinc-400 dark:text-zinc-500"
               >
                 <span className="h-4 w-0.5 rounded-full bg-zinc-200 dark:bg-zinc-500" />
-                <span className="ml-3">{formatDate(article.date)}</span>
+                <span className="ml-3">
+                  {formatDate(article.date)} <span aria-hidden="true">·</span>{' '}
+                  {formatReadingTime(readingTimeMinutes)}
+                </span>
               </time>
               {article.tags && article.tags.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
