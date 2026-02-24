@@ -1,17 +1,18 @@
 import { ArticleLayout } from '@/components/ArticleLayout'
 
 export const article = {
-  author: 'Jody LeCompte',
-  date: '2026-02-24',
-  title: 'Failing in Public: Hidden Complexity and AI Expectations',
-  description:
-    'AI makes hard things look easy, and that is a trap. This post is about the moment the magic wears off, when a "working prototype" meets real data, edge cases pile up, and the gap between "it runs" and "it works" turns out to be a lot wider than expected.',
-  tracks: ['learning-ai-in-public'],
+                                                                                                    author: 'Jody LeCompte',
+                                                                                                    date: '2026-02-24',
+                                                                                                    title: 'Failing in Public: Hidden Complexity and AI Expectations',
+                                                                                                    description: 'AI makes hard things look easy, and that is a trap. This post is about the moment the magic wears off, when a "working prototype" meets real data, edge cases pile up, and the gap between "it runs" and "it works" turns out to be a lot wider than expected.',
+                                                                                                    tracks: [
+                                                                                                                                                                                                        'learning-ai-in-public',
+                                                                                                    ],
 }
 
 export const metadata = {
-  title: article.title,
-  description: article.description,
+                                                                                                    title: article.title,
+                                                                                                    description: article.description,
 }
 
 export default (props) => <ArticleLayout article={article} {...props} />
@@ -320,16 +321,21 @@ failed successfully.
 
 Another run placed a `footnotes` array at the top level of the JSON object instead of
 attaching it to paragraph blocks. Inline markers were not transformed as instructed. The
-author field was hallucinated. The title was truncated. The structure was close enough to look plausible but incorrect in all the ways that mattered.
+author field was hallucinated. The title was truncated. The structure was close enough to look
+plausible but incorrect in all the ways that mattered.
 
-All three failures point to the same issue. The heuristic approach broke because it lacked capability; it simply could not infer semantic structure.
-The LLM approach broke for the opposite reason: it had the capability, but no controllable guarantee that the output would conform exactly to the structure
-required. I traded a weakness in intelligence and rigidity for an intelligence with no rigidity or guardrails in its output.
+All three failures point to the same issue. The heuristic approach broke because it lacked capability;
+it simply could not infer semantic structure. The LLM approach broke for the opposite reason: it had the
+capability, but no controllable guarantee that the output would conform exactly to the structure
+required. I traded a weakness in intelligence and rigidity for an intelligence with no rigidity or
+guardrails in its output.
 
 ## The Fix: Grammar-Constrained Decoding
 
-The instinct when you see output like that is to fix the prompt. Add a rule*do not emit duplicate keys*. Add another: _footnotes go on the paragraph block, not the top level_. That feels like iteration. It's actually deferring understanding. I kept operating
-under the assumption that the AI either did not understand me, or was just 'choosing' to disregard.
+The instinct when you see output like that is to fix the prompt. Add a rule*do not emit duplicate keys*.
+Add another: _footnotes go on the paragraph block, not the top level_. That feels like iteration. It's actually
+deferring understanding. I kept operating under the assumption that the AI either did not understand me, or was just
+'choosing' to disregard.
 
 The fix that actually worked was grammar-constrained decoding. Ollama
 ([as of v0.5.0+](https://ollama.com/blog/structured-outputs)) supports passing a JSON Schema
@@ -474,13 +480,33 @@ The shift happened when I revisited the chapter boundary issue and opened the me
 
 ```json
 {
-  "chapters": [
-    { "title": "Preface", "startPage": 3, "endPage": 4 },
-    { "title": "Biographical Background", "startPage": 5, "endPage": 47 },
-    { "title": "To Mistress Taylor", "startPage": 48, "endPage": 50 },
-    { "title": "To the Lady Earlstoun", "startPage": 51, "endPage": 51 },
-    { "title": "For Marion M'Knaught", "startPage": 52, "endPage": 54 }
-  ]
+                                                                                                    "chapters": [
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                            "title": "Preface",
+                                                                                                                                                                                                                                                                                                            "startPage": 3,
+                                                                                                                                                                                                                                                                                                            "endPage": 4
+                                                                                                                                                                                                        },
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                            "title": "Biographical Background",
+                                                                                                                                                                                                                                                                                                            "startPage": 5,
+                                                                                                                                                                                                                                                                                                            "endPage": 47
+                                                                                                                                                                                                        },
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                            "title": "To Mistress Taylor",
+                                                                                                                                                                                                                                                                                                            "startPage": 48,
+                                                                                                                                                                                                                                                                                                            "endPage": 50
+                                                                                                                                                                                                        },
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                            "title": "To the Lady Earlstoun",
+                                                                                                                                                                                                                                                                                                            "startPage": 51,
+                                                                                                                                                                                                                                                                                                            "endPage": 51
+                                                                                                                                                                                                        },
+                                                                                                                                                                                                        {
+                                                                                                                                                                                                                                                                                                            "title": "For Marion M'Knaught",
+                                                                                                                                                                                                                                                                                                            "startPage": 52,
+                                                                                                                                                                                                                                                                                                            "endPage": 54
+                                                                                                                                                                                                        }
+                                                                                                    ]
 }
 ```
 
