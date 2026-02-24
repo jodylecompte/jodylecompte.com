@@ -1,0 +1,535 @@
+import { ArticleLayout } from '@/components/ArticleLayout'
+
+export const article = {
+  author: 'Jody LeCompte',
+  date: '2026-02-24',
+  title: 'Failing in Public: Hidden Complexity and AI Expectations',
+  description:
+    'AI makes hard things look easy, and that is a trap. This post is about the moment the magic wears off, when a "working prototype" meets real data, edge cases pile up, and the gap between "it runs" and "it works" turns out to be a lot wider than expected.',
+  tracks: ['learning-ai-in-public'],
+}
+
+export const metadata = {
+  title: article.title,
+  description: article.description,
+}
+
+export default (props) => <ArticleLayout article={article} {...props} />
+
+## Introduction
+
+One of the first things people say when talking about AI is how fast it is. This is true in several ways.
+
+It's fast at generating text, fast at summarizing, fast at producing something that looks, feels and almost smells
+finished. It is also fast at going from "this is going well" to "I need to rethink the entire approach" in a single
+afternoon.
+
+Things were going great, until they weren't.
+
+The project is called, at least for now, [Theologos](https://github.com/jodylecompte/theologos). It is a theological
+study tool built to make nearly two thousand years of public domain Christian writing more accessible, namely in two ways:
+
+First, discoverability. The material exists. It has existed for centuries. But it is fragmented across low quality scans, inconsistent translations and editions, and poorly indexed aggregations. Finding a specific sermon, confession, or early church writing often requires already knowing it exists.
+
+Second, readability. After you finally track these works down, they are usually locked inside scanned PDFs or minimally processed text dumps. There is little structure. No meaningful navigation. No reliable chapter boundaries. No typed content blocks. Footnotes are either flattened into noise or stranded at the bottom of pages.
+
+I was trying to turn those PDFs into actual data. A defined schema, a relational database, explicit chapter boundaries, paragraphs that are semantically paragraphs and not text nodes with padding. Headings needed to properly identified. Footnotes would be attached to the sentence they belong to, not floating at the bottom of a page because that is how the PDF happened to lay them out.
+
+I did not just want “looks like a book.” I wanted it to feel like Jonathan Edwards had written _Sinners in the Hands of an Angry God_ directly in markdown for a web-first experience.
+
+Correctness was the most important factor. No compromise. And correctness is precisely where everything began to unravel.
+
+## Constraint Reminder
+
+Just for context: at the time of writing this, I am unemployed. I am job searching full time and learning AI tools on the side. One of the goals of the “Learning AI in Public” series is to test what is actually viable when you do not have unlimited time, unlimited credits, or a company expense account behind you.
+
+If you are already thinking, “Why didn't you just use [insert model here]? That would have made this a non issue,” you are not wrong.
+
+This probably would have been solved in an afternoon with a larger hosted model.
+
+It also would have cost real money. When you are iterating, retrying, and experimenting, that cost compounds quickly. That constraint is not theoretical. It is the environment this was built in.
+
+## The Schema
+
+The first step was deciding what a fully processed book should look like.
+
+EPUB already contains most of the semantic structure that plain PDF extraction lacks, so I chose to make that the target format. If I could normalize PDFs into something EPUB-like, I would also save time later when writing an EPUB importer.
+
+The backend expects a specific intermediate format:
+
+```typescript
+interface BookSourceJson {
+  metadata: { type: 'book'; title: string; author?: string; ... };
+  chapters: Array<{
+    title: string;
+    blocks: Array<
+      | { type: 'paragraph'; content: string; sourcePage?: number; footnotes?: BookFootnote[] }
+      | { type: 'heading'; level: 1 | 2 | 3; content: string; sourcePage?: number }
+      | { type: 'blockquote'; content: string; sourcePage?: number }
+    >;
+  }>;
+}
+```
+
+That `BookSourceJson` is the contract. It represents a book after normalization but before database import. It is version controlled, human readable, and completely deterministic downstream.
+
+No LLM is involved after this format is produced. Once `BookSourceJson` exists, the rest of the pipeline is mechanical.
+
+The pipeline has three stages:
+
+```
+PDF
+ └─ book:extract     raw page-by-page text  (pdftotext → extracted/book.json)
+ └─ book:normalize   LLM step               (sources/book.json)
+ └─ importer:import  deterministic DB write via BookImportStrategy
+```
+
+The entire problem lives in book:normalize.
+
+I had a working prototype. The frontend in Angular was far-enough along that I could do a real "user test". At first glance,
+I was somewhere between satisfied and excited. Wouldn't you know it... this turned out to be the exact emotional state that
+precedes a rude awakening.
+
+## The Heuristic Approach (First Attempt)
+
+Before any model entered the picture, I tried to solve this the way most engineers would: pattern matching.
+
+If a book says "Chapter 1" or "CHAPTER ONE" or "Part I," you have a boundary. If it uses numbered headings like "I. Title" or "1. Title," you can segment on those. Theological works tend to be structured. I assumed there would be reliable signals to work with.
+
+I started with a modern book as a test and it worked. A few tweaks, some cooperation from the typography, and I had something that looked like structure.
+
+Then I ran it against _The Loveliness of Christ_ by Samuel Rutherford, and it broke. Like, it broke magnificently.
+
+By that point, I had also already made an early compromise to manually write metadata to inform the extraction tool on which pages to pull via `pdftotext`.
+
+```JSON
+{
+  "title": "The Lovliness of Christ",
+  "author": "Samuel Rutherford",
+  "slug": "the-loveliness-of-christ",
+  "type": "book",
+  "tradition": null,
+  "copyright": "",
+  "pdfFile": "data/loveliness_2012.pdf",
+  "detectedChapters": [],
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Preface",
+      "startPage": 3,
+      "endPage": 4
+    },
+    {
+      "number": 2,
+      "title": "Biographical Background",
+      "startPage": 5,
+      "endPage": 47
+    },
+    {
+      "number": 3,
+      "title": "To Mistress Taylor",
+      "startPage": 48,
+      "endPage": 50
+    },
+    {
+      "number": 4,
+      "title": "To the Lady Earlstoun",
+      "startPage": 51,
+      "endPage": 51
+    },
+    {
+      "number": 5,
+      "title": "For Marion M'Knaught",
+      "startPage": 52,
+      "endPage": 54
+    }
+  ]
+}
+
+```
+
+This book had no numbered chapters and no consistent headings. Where headings did appear, they were sometimes a single word per line, which looked like structure but carried none. It is a collection of letters from the 1600s, not a conventional book, and the heuristics had nothing to work with.
+
+Even on books where chapter detection did work, the quality ceiling was around 60%. Chapter detection was also only part of the actual problem. The full list:
+
+1. **Paragraph segmentation**: the heuristic dumped entire chapter text as one blob, not individual paragraph blocks
+2. **Footnote handling**: no concept of inline markers or page-bottom definitions
+3. **Block typing**: no way to distinguish body text from headings, hymn stanzas, or blockquotes
+
+I had collapsed the scope without realizing it. The problem I described to myself was simple. The problem I actually had was not.
+
+A language model still seemed like the right tool. Reading raw text and identifying semantic structure is exactly what language models do. What is a heading, what is a paragraph, what is a stanza. It is not a reasoning problem. It is not a domain knowledge problem. It is a language problem, and a fairly shallow one at that.
+
+That is why a small local model felt like enough. You do not need a frontier model to tell a heading from a paragraph. Getting one running locally for this project was the subject of my [That's It? Running a Local LLM in 2026](https://www.jodylecompte.com/articles/thats-it-local-llm-in-2026).
+
+## It Worked on the First Few Pages
+
+The first model I used was `mistral:7b-instruct-q4_0`. It felt like a reasonable choice for local inference. Not tiny, not enormous. Big enough to handle structure,
+small enough to run comfortably on my laptop. I'm still working on a mental model of size to capability and also what types of work different models are suited for.
+
+The pipeline at that point looked like this:
+
+```
+PDF
+ └─ book:extract     raw page-by-page text        (pdftotext → extracted/book.json)
+ └─ book:normalize   chunk → LLM → structured JSON
+ └─ importer:import  deterministic DB write       (BookImportStrategy)
+```
+
+Everything unstable lived inside `book:normalize`. The flow inside that step was:
+
+```json
+extracted/book.json
+ └─ group pages into chunks of 8
+ └─ send chunk to Ollama /api/chat
+ └─ receive structured JSON
+ └─ save raw response (for debugging)
+ └─ merge chapters across chunks
+ └─ write sources/book.json
+```
+
+The eight-page chunk size was chosen to stay within the model's context window while giving it enough continuity to detect structure. Saving every raw model response
+before parsing it was a quiet decision that turned out to matter a lot. At the time, it was just defensive programming. Later, it became the only reason I could
+understand what was happening.
+
+The first test was simple: run the pipeline on eight pages out of the fifty-four page document. It worked!
+
+The first eight pages looked right. Two chapters, thirty-seven blocks, footnotes attached where they belonged. The JSON conformed to the schema, nothing crashed,
+and a quick inspection did not reveal anything obviously broken. It was enough to convince me that the normalization step was basically solved.
+
+Then I ran the full document. Chunks two through seven returned chapters with empty blocks arrays. The structure was technically valid, the JSON parsed, the
+schema validated, but the content was gone. No errors, no exceptions, just clean, empty output flowing through the pipeline. That was the first moment I realized I
+had mistaken a convincing sample for a reliable system.
+
+## I Didn't Know What I Didn't Know
+
+Before I get into the failure modes, I want to be honest about my mental model going in, because I think the mistakes start there.
+
+I was treating the LLM like a smart function. Give it text, describe what you want back, receive structured output. And the first eight pages confirmed
+that mental model, which was the problem. The test did not accurately represent the average case, in fact, it was exclusively a best-case scenario test.
+
+Pages nine through fifty-four are different.
+
+The first chunk happened to include an explicit section boundary. The rest of the document did not. By chunking the PDF into eight-page windows, I had quietly introduced artificial boundaries into a text that did not contain them. The model was not failing to recognize structure. I was asking it to invent structure at arbitrary cut points and then maintain continuity across them without actually giving it continuity.
+
+That was not a prompting issue. It was an architectural one.
+
+There was also a footnote problem I hadn't fully accounted for. This particular PDF uses inline numeric markers attached directly to words,
+e.g.`vail20`, `marrow21`, `casten22`, with the definitions sitting at the bottom of each page in a specific layout. To handle footnotes
+correctly, the model needed to:
+
+- Detect the inline markers
+- Transform them (`vail20` → `vail[^20]`)
+- Extract the definitions from the bottom of the page
+- Associate each definition with the correct paragraph
+- Strip the definition lines from the main content
+
+That is five distinct sub-operations, just for footnotes, nested inside a larger request that also asked for chapter detection, paragraph segmentation, block classification, and front matter removal. I was asking a small 7B class model, running CPU-only on a ThinkPad, to do seven things at once and return valid, schema-constrained JSON.
+
+## My Prompt
+
+The prompt did get a few tweaks throughout this process, such as the letters section instructions that involved trying
+to prompt my way out of the problems described above. The final version looked like this:
+
+```js
+const SYSTEM_PROMPT = `You are a precise text structuring assistant. Convert raw PDF text into a structured JSON document.
+
+METADATA RULES:
+- "type" must always be "book".
+- "title" is the actual title of the work as it appears in the text.
+- "sourceFormat" is always "pdf".
+- "sourceFile" is the source file path provided in the user message.
+- Include "author" only if explicitly stated in the text. Do not guess or infer.
+- Leave optional fields out entirely rather than using "unknown" or "omit".
+
+CHAPTER RULES:
+- Each named section (e.g. "PREFACE", "BIOGRAPHICAL BACKGROUND", "Chapter 1") becomes a separate chapter entry.
+- If no named divisions exist in the text, use one chapter for the entire body.
+- Skip front matter entirely (title page, copyright page, publisher info) — produce no blocks and no chapter entry for these pages.
+
+LETTER COLLECTION RULES (applies when the source is a collection of letters):
+- Many theological works are letter collections with no chapter headings in most of the body.
+- When you encounter a standalone line that is clearly a letter recipient (e.g. "To Mistress Taylor", "For Marion M'Knaught", "To the Lady Earlstoun"), start a new chapter with that exact line as the title.
+- Unlabeled letter excerpts with no recipient heading all belong in a single chapter. The continuation note in the user message will tell you what chapter title to use for these.
+- Do not invent recipient names or chapter titles that do not appear in the text.
+
+BLOCK RULES:
+- Body paragraphs → type "paragraph"
+- Verse stanzas, hymn lines, extended quotations → type "blockquote"
+- Sub-headings within a chapter → type "heading" with level 1, 2, or 3
+- Set "sourcePage" on every block to the page number the content came from.
+- Omit empty blocks entirely.
+
+FOOTNOTE RULES:
+Footnotes appear as inline digit markers attached directly to words with no space
+(e.g. "providence1", "brae.2") with their definitions at the bottom of the page
+(e.g. "1\n  providence - provision, supply").
+
+For each paragraph that contains inline markers:
+1. Replace the inline digit with a bracketed marker in the content string:
+   "providence1" becomes "providence[^1]"
+   "brae.2" becomes "brae.[^2]"
+2. Add a "footnotes" array on that specific paragraph block with the definitions:
+   "footnotes": [{ "mark": "1", "text": "providence - provision, supply" }]
+3. Do NOT emit the footnote definition lines as separate paragraph blocks.
+
+Footnotes belong inside the paragraph block that contains the inline marker — never anywhere else.
+
+STRIP from all content:
+- Standalone page numbers (a bare integer appearing alone at the end of a page)
+- Blank separator lines`
+```
+
+## Three Failure Modes
+
+Three distinct patterns emerged as I began testing and inspecting the raw outputs.
+
+### Failure 1: Summarization
+
+The first unconstrained run returned a multi-paragraph prose summary of Rutherford's
+letters. No JSON. No structure. Just a clean, well-written summary.
+
+The prompt explicitly required a raw JSON object. No explanation. No markdown. The model
+ignored it. This exposed a basic limitation of instruction-only prompting. You can describe
+the desired output format. You cannot enforce it. The model is free to generate any valid
+continuation of the input. Prompts influence likelihood. They do not restrict the grammar.
+
+### Failure 2: Duplicate Object Keys
+
+Subsequent runs produced JSON that parsed without error, which initially looked like progress until
+I examined the raw output more closely.
+
+One batch contained:
+
+```json
+{
+  "title": "PREFACE",
+  "blocks": [ ...preface content... ],
+  "blocks": [ ...biographical content... ]
+}
+```
+
+Two `blocks` keys in the same object.
+
+Standard JSON allows duplicate keys, so `JSON.parse()` silently keeps the last
+occurrence and discards earlier values, which meant my validator passed because chapters
+existed while half the content had already been overwritten without any visible error. Test
+failed successfully.
+
+### Failure 3: Structural Hallucination
+
+Another run placed a `footnotes` array at the top level of the JSON object instead of
+attaching it to paragraph blocks. Inline markers were not transformed as instructed. The
+author field was hallucinated. The title was truncated. The structure was close enough to look plausible but incorrect in all the ways that mattered.
+
+All three failures point to the same issue. The heuristic approach broke because it lacked capability; it simply could not infer semantic structure.
+The LLM approach broke for the opposite reason: it had the capability, but no controllable guarantee that the output would conform exactly to the structure
+required. I traded a weakness in intelligence and rigidity for an intelligence with no rigidity or guardrails in its output.
+
+## The Fix: Grammar-Constrained Decoding
+
+The instinct when you see output like that is to fix the prompt. Add a rule*do not emit duplicate keys*. Add another: _footnotes go on the paragraph block, not the top level_. That feels like iteration. It's actually deferring understanding. I kept operating
+under the assumption that the AI either did not understand me, or was just 'choosing' to disregard.
+
+The fix that actually worked was grammar-constrained decoding. Ollama
+([as of v0.5.0+](https://ollama.com/blog/structured-outputs)) supports passing a JSON Schema
+as the `format` field in the `/api/chat` request:
+
+```json
+{
+  "model": "llama3.2:3b",
+  "format": { ...json schema... },
+  "messages": [...]
+}
+```
+
+As explained by Claude:
+
+> Ollama passes this schema to llama.cpp, which converts it to a **GBNF grammar** — an extended Backus-Naur Form grammar. The grammar is applied during token sampling: at every step, the > sampler considers only tokens that could appear in a valid continuation of the JSON being built. Invalid tokens are masked out entirely. This is not a soft hint. It is a hard constraint at the sampling level.
+
+The schema I passed:
+
+```javascript
+const OUTPUT_SCHEMA = {
+  type: 'object',
+  required: ['metadata', 'chapters'],
+  properties: {
+    metadata: {
+      type: 'object',
+      required: ['type', 'title', 'sourceFormat', 'sourceFile'],
+      properties: {
+        type: { type: 'string' },
+        title: { type: 'string' },
+        author: { type: 'string' },
+        sourceFormat: { type: 'string' },
+        sourceFile: { type: 'string' },
+      },
+    },
+    chapters: {
+      type: 'array',
+      items: {
+// ...omitted for brevity
+```
+
+What that schema buys against each failure mode:
+
+| Failure                | Before                              | After                                                                                               |
+| ---------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Summarization          | Model could emit any token sequence | Schema requires `{"metadata":...,"chapters":[...]}` — a prose summary cannot conform                |
+| Duplicate `blocks` key | Model could repeat any key          | Grammar tracks open object keys; a second `"blocks"` in the same object is not a valid continuation |
+| Top-level `footnotes`  | Model could add any top-level key   | Schema defines `required: ["metadata","chapters"]` — no other top-level key is valid                |
+
+With grammar constraints active, the system prompt no longer needs to enforce format at all. I removed every instruction that was load-bearing only because of the unconstrained output space:
+
+- "OUTPUT ONLY A RAW JSON OBJECT. No explanation. No markdown. No code fences."
+- The example JSON structure
+- "Start your response with `{` and end with `}`"
+
+These weren't meaningful instructions, just the desperate pleas of a desperate man trying to petition his AI co-worker into cooperation.
+
+With the output now enforced, the prompt could focus purely on semantic instructions: what the metadata fields mean, how to decide chapter boundaries, how to categorize block types, the footnote handling protocol, what to strip.
+
+## Model and Context Window Configuration
+
+This was another point where I began daydreaming, thinking that as soon as I pushed through these last issues, I would be at the top of the mountain and resting in the sun.
+
+Things were starting to work better, but performance became a significant issue. It was taking upwards of 2 to 3 minutes per page.
+
+With constrained output in place, I switched models. mistral:7b-instruct-q4_0 ran at roughly 8 to 10 tokens per second on the Ryzen 5 7535U. Research suggested that llama3.2:3b is substantially better at instruction following than older Llama versions and runs at 20 to 30 tokens per second on the same hardware. Because structure was now enforced at the grammar level, my earlier concern about smaller models drifting from valid JSON felt mitigated.
+
+At 25 tokens per second on average, a full 54 page book, processed in 7 chunks of 8 pages each, with roughly 6,000 tokens of structured output per call, takes 30 to 40 minutes. The mistral run would have been 90 minutes or more, assuming it produced usable output at all. That delta felt like a win, but it was still slow enough to matter.
+
+Two settings that contributed to this improvement were `num_predict` and `num_ctx`. These changes were suggested by Claude,
+and te same explanation I was given below:
+
+> **`num_predict`** is the maximum output token count per call. I had this set to `32768` initially. That's not just a ceiling — llama.cpp pre-allocates for this value, and the model may generate toward it if there's no other stopping signal. For 8 pages of theological text, structured JSON output is realistically 4,000–8,000 tokens. Setting `num_predict: 12000` gives adequate headroom without burning time on a model that has nothing left to say.
+>
+> **`num_ctx`** is the total context window — input and output combined. This controls the KV cache size, which directly affects per-token generation speed on CPU. A larger context window means more memory bandwidth consumed per token. Set to `16384` here: enough to cover roughly 4,000 tokens of input (system prompt plus 8 pages of text) and up to 12,000 tokens of output. The model's default is `131072`. Running at that default on CPU-only hardware is a free way to make everything slower. Match your context window to your actual task size.
+
+I also discovered that Ollama was not using all available CPU threads by default. On a machine with no discrete GPU, that matters. I added a systemd override to increase thread usage:
+
+```
+$ sudo systemctl edit ollama
+```
+
+Take note that only some portions of the configuration can be edited and others are discarded on save. I used
+the following.
+
+```text
+[Service]
+Environment="OLLAMA_NUM_THREADS=12"
+Environment="OLLAMA_GPU_OVERHEAD=0"
+```
+
+Allowing Ollama to use more cores improved throughput significantly. It did not transform the experience, but it reduced idle capacity and made longer runs less punishing.
+
+One other issue that appeared early had nothing to do with the model at all. I was calling Ollama with `stream: false`,
+which waits for the entire completion before returning a response body. On Node 25 with `undici` as the HTTP client, this triggered `UND_ERR_HEADERS_TIMEOUT` during long generations because the headers idle timeout fired before the model finished. Switching to `stream: true` and consuming the response incrementally resolved it.
+
+Even after these changes, however, the underlying constraint remained. Structured generation at this scale is expensive on CPU only hardware. My AMD processor does have built-in graphics, I may experiment with that.
+
+## What I Changed
+
+Regretfully, grammar constraints did not fix the problem. They only eliminated one class of failure.
+
+With JSON structure guaranteed, the next issue surfaced at the content level.
+
+The document was processed in eight-page segments. When a segment began mid-chapter, I passed the previous chapter title forward as a continuation hint so the model would know where it was in the document. That adjustment appeared to fix chunk two.
+
+Chunk three failed again.
+
+`batch-2-raw.txt` was 14k bytes with 55 correctly structured blocks.  
+`batch-3-raw.txt` was 230 bytes:
+
+```json
+{
+  "metadata": { "type": "book", "title": "", ... },
+  "chapters": [{ "title": "BIOGRAPHICAL BACKGROUND", "blocks": [] }]
+}
+```
+
+The continuation hint carried forward was "Biographical Background." The content in chunk three was the beginning of Rutherford's letters. The instruction and the text no longer agreed.
+
+Instead of forcing the content under a chapter title that did not fit, the model produced the smallest schema-correct response it could: a chapter with no blocks.
+
+The structure was valid, but it had no content.
+
+At that point it became clear that the grammar constraint had shifted the failure mode. The model could no longer emit malformed JSON, so when faced with conflicting signals it satisfied the schema first and abandoned the content.
+
+I tried to recover with retries, temperature adjustments, and smarter title overrides. The next run hit `num_predict: 12000` after entering a repetition loop, emitting the same paragraphs under progressively different fragment titles until the output truncated mid-stream.
+
+Each adjustment reduced one symptom and revealed another. The problem was no longer about format or prompting. It was about how much responsibility I had assigned to a single generation call.
+
+## The Part Nobody Talks About
+
+Debugging a language model is not the same as debugging code.
+
+When code fails, it leaves a trace. There is a stack frame, a line number, a type mismatch, a boundary that was crossed incorrectly. Something that gives you some semblance of an entry-point into troubleshooting.
+
+When an LLM fails, there is no stack trace. There is only output. You are left reconstructing the cause from the artifact. You read a malformed structure or an empty block array and ask yourself what combination of instructions, context, and sampling decisions led to that result. The process is interpretive. You are debugging a probability distribution through its consequences.
+
+The danger is that prompt iteration mimics traditional engineering. You change an instruction, re-run the job, inspect the output, and convince yourself you are making forward momentum. But unlike adjusting a function in a deterministic system, you are not isolating a variable. You are nudging a stochastic process and interpreting whatever comes back. The feedback feels structured when the underlying mechanism is almost the opposite.
+
+The shift happened when I revisited the chapter boundary issue and opened the metadata file that had been sitting in the project the entire time:
+
+```json
+{
+  "chapters": [
+    { "title": "Preface", "startPage": 3, "endPage": 4 },
+    { "title": "Biographical Background", "startPage": 5, "endPage": 47 },
+    { "title": "To Mistress Taylor", "startPage": 48, "endPage": 50 },
+    { "title": "To the Lady Earlstoun", "startPage": 51, "endPage": 51 },
+    { "title": "For Marion M'Knaught", "startPage": 52, "endPage": 54 }
+  ]
+}
+```
+
+The chapter discovery problem was already solved. Every chunking failure and continuation hack traced back to the same decision: I ignored the structured data I had written and asked the model to rediscover it.
+
+In a dogmatic attempt to automate everything, I automated the one part that should have remained deterministic. The table of contents was there. The page ranges were stable. I could have extracted them directly and moved on. Instead, I layered a probabilistic system over fixed data and then spent days compensating for its guesses.
+
+The problem was not model capability. It was scope control. I tried to make the pipeline intelligent end to end, and in doing so made it slower, more fragile, and harder to reason about than a simpler design would have been.
+
+On the side of this project, I have been building a stripped down automation system of my own. Nothing flashy. Just workflows, agents, and a lot of ambition about what should be delegated. And I keep running into the same question: how much of this actually needs a model in the loop?
+
+There is a strain of thinking in AI circles that says the model should do everything. Let it log in. Let it click. Let it decide. Let it build its own tools. Just describe the goal and step aside. I understand the appeal. I also now understand the cost.
+
+When you hand a probabilistic system responsibility for steps that could have been deterministic, you do not get elegance. You get opacity. You get retries. You get guardrails stacked on top of guardrails. And you spend more time stabilizing behavior than you would have spent writing the rule in the first place.
+
+This PDF pipeline was not an isolated mistake. It was a warning about a pattern. The time I've spent deeply thinking about
+this experiment and it's outcomes will most assuredly pay dividends in my future work.
+
+## Conclusion
+
+I am starting this pipeline over.
+
+Here is what actually went wrong, in concrete terms:
+
+- Chapter boundaries were inferred even when curated metadata already existed, which introduced unnecessary model dependency and chunk continuity issues.
+- Footnote extraction required five sub-operations, all embedded inside a single generation request, increasing ambiguity and error surface.
+- Inline marker normalization depended on correct association before validation could detect structural drift.
+- Eight-page chunking introduced artificial boundaries into prose that had none, which broke continuity across batches.
+- Context window sizing directly affected cost, latency, and token truncation risk.
+- CPU-only inference limited throughput and increased retry cost.
+- Constrained decoding guaranteed structural validity while exposing weaknesses in semantic classification.
+- Validation rules confirmed schema compliance without verifying semantic completeness.
+
+Each of these decisions made sense at the time. None were reckless. All were incremental. Taken together, though, they
+produced a system that was harder to reason about than it needed to be.
+
+Somewhere between malformed JSON and empty chapter arrays, I realized I was no longer just debugging a pipeline. I was
+debugging my expectations of intelligence. I had automated discovery that was already deterministic and handed boundary decisions
+to a probabilistic system that could never truly own them. Grammar constraints fixed the syntax. Iteration fixed the shape. Failure
+fixed the understanding.
+
+I am not discouraged by how this ended. Frustrated and humbled, yes, but not discouraged. Breaking the system and tracing every
+assumption back to its source clarified something important: judgment cannot be abstracted away. Theologos is still on my desk.
+The PDFs are still messy. The metadata is still there. The difference now is clarity about responsibility.
+
+The next version of this pipeline will be narrower in scope and firmer in its boundaries. Chapters will come from metadata. Chunking
+will respect real divisions. The model will classify and structure text, not invent architecture. Deterministic where it can be,
+probabilistic where it makes sense to be.
+
+If there is a lesson here, it is that intelligence without constraint produces opacity, and opacity scales faster than understanding.
+The rebuild will be smaller, simpler, and easier to reason about. And when it finally works, it will not feel like magic. It will
+feel earned.
